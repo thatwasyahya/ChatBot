@@ -1,16 +1,16 @@
 package fr.ensim.interop.introrest;
 
-import fr.ensim.interop.introrest.model.telegram.ApiResponseUpdateTelegram;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestClientException;
-import org.springframework.web.client.RestTemplate;
+		import fr.ensim.interop.introrest.model.telegram.ApiResponseUpdateTelegram;
+		import org.springframework.beans.factory.annotation.Value;
+		import org.springframework.boot.CommandLineRunner;
+		import org.springframework.stereotype.Component;
+		import org.springframework.web.client.RestClientException;
+		import org.springframework.web.client.RestTemplate;
 
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+		import java.util.Timer;
+		import java.util.TimerTask;
+		import java.util.logging.Level;
+		import java.util.logging.Logger;
 
 @Component
 public class ListenerUpdateTelegram implements CommandLineRunner {
@@ -20,6 +20,12 @@ public class ListenerUpdateTelegram implements CommandLineRunner {
 
 	@Value("${telegram.bot.token}")
 	private String telegramBotToken;
+
+	@Value("${open.weather.api.url}")
+	private String weatherApiUrl;
+
+	@Value("${open.weather.api.token}")
+	private String weatherApiToken;
 
 	private final RestTemplate restTemplate = new RestTemplate();
 	private int offset = 0;
@@ -53,12 +59,15 @@ public class ListenerUpdateTelegram implements CommandLineRunner {
 						String chatId = String.valueOf(update.getMessage().getChat().getId());
 						String userName = update.getMessage().getFrom().getFirstName();
 
-						if (text.toLowerCase().contains("hello")) {
+						if (text.contains("hello")) {
 							sendMessage(chatId, "Hello " + userName + "!");
-						} else if (text.toLowerCase().contains("meteo")) {
-							sendMessage(chatId, "Fetching weather...");
-							// Fetch weather info and send back
-						} else if (text.toLowerCase().contains("blague")) {
+						} else if (text.contains("meteo")) {
+							// Utiliser des valeurs de latitude et longitude par défaut ou demander à l'utilisateur
+							double lat = 44.34;
+							double lon = 10.99;
+							String weatherResponse = getWeather(lat, lon);
+							sendMessage(chatId, "Voici la météo actuelle : " + weatherResponse);
+						} else if (text.contains("blague")) {
 							sendMessage(chatId, "Fetching a joke...");
 							sendMessage(chatId, getJoke());
 						}
@@ -81,6 +90,11 @@ public class ListenerUpdateTelegram implements CommandLineRunner {
 			// Handle connection errors
 			e.printStackTrace();
 		}
+	}
+
+	private String getWeather(double lat, double lon) {
+		String url = weatherApiUrl + "weather?lat=" + lat + "&lon=" + lon + "&appid=" + weatherApiToken + "&units=metric";
+		return restTemplate.getForObject(url, String.class);
 	}
 
 	private String getJoke() {

@@ -45,8 +45,8 @@ public class MessageRestController {
 	}
 
 	@GetMapping("/weather")
-	public String getWeather(@RequestParam String city) {
-		String url = weatherApiUrl + "weather?q=" + city + "&appid=" + weatherApiToken;
+	public String getWeather(@RequestParam double lat, @RequestParam double lon) {
+		String url = weatherApiUrl + "weather?lat=" + lat + "&lon=" + lon + "&appid=" + weatherApiToken + "&units=metric";
 		return restTemplate.getForObject(url, String.class);
 	}
 
