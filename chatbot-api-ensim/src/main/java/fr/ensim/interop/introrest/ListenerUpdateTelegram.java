@@ -1,16 +1,17 @@
 package fr.ensim.interop.introrest;
 
-		import fr.ensim.interop.introrest.model.telegram.ApiResponseUpdateTelegram;
-		import org.springframework.beans.factory.annotation.Value;
-		import org.springframework.boot.CommandLineRunner;
-		import org.springframework.stereotype.Component;
-		import org.springframework.web.client.RestClientException;
-		import org.springframework.web.client.RestTemplate;
+import fr.ensim.interop.introrest.model.telegram.ApiResponseUpdateTelegram;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.CommandLineRunner;
+import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
-		import java.util.Timer;
-		import java.util.TimerTask;
-		import java.util.logging.Level;
-		import java.util.logging.Logger;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Component
 public class ListenerUpdateTelegram implements CommandLineRunner {
@@ -83,7 +84,10 @@ public class ListenerUpdateTelegram implements CommandLineRunner {
 	}
 
 	private void sendMessage(String chatId, String text) {
-		String url = getTelegramApiUrl("sendMessage") + "?chat_id=" + chatId + "&text=" + text;
+		String url = UriComponentsBuilder.fromHttpUrl(getTelegramApiUrl("sendMessage"))
+				.queryParam("chat_id", chatId)
+				.queryParam("text", text)
+				.toUriString();
 		try {
 			restTemplate.getForObject(url, String.class);
 		} catch (RestClientException e) {
@@ -93,7 +97,13 @@ public class ListenerUpdateTelegram implements CommandLineRunner {
 	}
 
 	private String getWeather(double lat, double lon) {
-		String url = weatherApiUrl + "weather?lat=" + lat + "&lon=" + lon + "&appid=" + weatherApiToken + "&units=metric";
+		String url = UriComponentsBuilder.fromHttpUrl(weatherApiUrl + "weather")
+				.queryParam("lat", lat)
+				.queryParam("lon", lon)
+				.queryParam("appid", weatherApiToken)
+				.queryParam("units", "metric")
+				.toUriString();
+		Logger.getLogger("ListenerUpdateTelegram").log(Level.INFO, "Weather API URL: " + url);
 		return restTemplate.getForObject(url, String.class);
 	}
 

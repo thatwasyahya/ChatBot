@@ -1,4 +1,4 @@
-package fr.ensim.interop.introrest.controller;
+package fr.ensim.interop.introrest.client;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -6,12 +6,14 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 import java.util.List;
 import java.util.Random;
 
 @RestController
 public class MessageRestController {
+
 
 	@Value("${telegram.api.url}")
 	private String telegramApiUrl;
@@ -40,13 +42,21 @@ public class MessageRestController {
 
 	@PostMapping("/sendMessage")
 	public String sendMessage(@RequestParam String chatId, @RequestParam String text) {
-		String url = getTelegramApiUrl("sendMessage") + "?chat_id=" + chatId + "&text=" + text;
+		String url = UriComponentsBuilder.fromHttpUrl(getTelegramApiUrl("sendMessage"))
+				.queryParam("chat_id", chatId)
+				.queryParam("text", text)
+				.toUriString();
 		return restTemplate.getForObject(url, String.class);
 	}
 
 	@GetMapping("/weather")
 	public String getWeather(@RequestParam double lat, @RequestParam double lon) {
-		String url = weatherApiUrl + "weather?lat=" + lat + "&lon=" + lon + "&appid=" + weatherApiToken + "&units=metric";
+		String url = UriComponentsBuilder.fromHttpUrl(weatherApiUrl + "weather")
+				.queryParam("lat", lat)
+				.queryParam("lon", lon)
+				.queryParam("appid", weatherApiToken)
+				.queryParam("units", "metric")
+				.toUriString();
 		return restTemplate.getForObject(url, String.class);
 	}
 
