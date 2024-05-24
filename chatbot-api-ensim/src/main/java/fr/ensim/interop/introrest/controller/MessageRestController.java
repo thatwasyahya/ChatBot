@@ -1,5 +1,6 @@
-package fr.ensim.interop.introrest.client;
+package fr.ensim.interop.introrest.controller;
 
+import fr.ensim.interop.introrest.service.BlagueService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -14,7 +15,6 @@ import java.util.Random;
 @RestController
 public class MessageRestController {
 
-
 	@Value("${telegram.api.url}")
 	private String telegramApiUrl;
 
@@ -28,13 +28,11 @@ public class MessageRestController {
 	private String weatherApiToken;
 
 	private final RestTemplate restTemplate = new RestTemplate();
-	private final List<String> jokes = List.of(
-			"Joke 1",
-			"Joke 2",
-			"Joke 3",
-			"Joke 4",
-			"Joke 5"
-	);
+	private final BlagueService blagueService;
+
+	public MessageRestController(BlagueService blagueService) {
+		this.blagueService = blagueService;
+	}
 
 	private String getTelegramApiUrl(String method) {
 		return telegramApiUrl + telegramBotToken + "/" + method;
@@ -46,6 +44,9 @@ public class MessageRestController {
 				.queryParam("chat_id", chatId)
 				.queryParam("text", text)
 				.toUriString();
+
+		url = decodeUrl(url);
+
 		return restTemplate.getForObject(url, String.class);
 	}
 
@@ -57,12 +58,22 @@ public class MessageRestController {
 				.queryParam("appid", weatherApiToken)
 				.queryParam("units", "metric")
 				.toUriString();
+
+		url = decodeUrl(url);
+
 		return restTemplate.getForObject(url, String.class);
 	}
 
 	@GetMapping("/joke")
 	public String getJoke() {
-		Random random = new Random();
-		return jokes.get(random.nextInt(jokes.size()));
+		return blagueService.getRandomJoke();
+	}
+
+	private String decodeUrl(String url) {
+		try {
+			return java.net.URLDecoder.decode(url, java.nio.charset.StandardCharsets.UTF_8.toString());
+		} catch (java.io.UnsupportedEncodingException e) {
+			throw new RuntimeException("Failed to decode URL", e);
+		}
 	}
 }

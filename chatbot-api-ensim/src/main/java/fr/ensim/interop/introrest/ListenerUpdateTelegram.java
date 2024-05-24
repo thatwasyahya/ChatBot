@@ -1,6 +1,7 @@
 package fr.ensim.interop.introrest;
 
 import fr.ensim.interop.introrest.model.telegram.ApiResponseUpdateTelegram;
+import fr.ensim.interop.introrest.controller.MessageRestController;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
@@ -29,7 +30,12 @@ public class ListenerUpdateTelegram implements CommandLineRunner {
 	private String weatherApiToken;
 
 	private final RestTemplate restTemplate = new RestTemplate();
+	private final MessageRestController messageRestController;
 	private int offset = 0;
+
+	public ListenerUpdateTelegram(MessageRestController messageRestController) {
+		this.messageRestController = messageRestController;
+	}
 
 	private String getTelegramApiUrl(String method) {
 		return telegramApiUrl + telegramBotToken + "/" + method;
@@ -63,14 +69,13 @@ public class ListenerUpdateTelegram implements CommandLineRunner {
 						if (text.contains("hello")) {
 							sendMessage(chatId, "Hello " + userName + "!");
 						} else if (text.contains("meteo")) {
-							// Utiliser des valeurs de latitude et longitude par défaut ou demander à l'utilisateur
 							double lat = 44.34;
 							double lon = 10.99;
-							String weatherResponse = getWeather(lat, lon);
+							String weatherResponse = messageRestController.getWeather(lat, lon);
 							sendMessage(chatId, "Voici la météo actuelle : " + weatherResponse);
 						} else if (text.contains("blague")) {
 							sendMessage(chatId, "Fetching a joke...");
-							sendMessage(chatId, getJoke());
+							sendMessage(chatId, messageRestController.getJoke());
 						}
 
 						offset = update.getUpdateId() + 1;
@@ -78,7 +83,6 @@ public class ListenerUpdateTelegram implements CommandLineRunner {
 				});
 			}
 		} catch (RestClientException e) {
-			// Handle connection errors
 			e.printStackTrace();
 		}
 	}
@@ -91,24 +95,7 @@ public class ListenerUpdateTelegram implements CommandLineRunner {
 		try {
 			restTemplate.getForObject(url, String.class);
 		} catch (RestClientException e) {
-			// Handle connection errors
 			e.printStackTrace();
 		}
-	}
-
-	private String getWeather(double lat, double lon) {
-		String url = UriComponentsBuilder.fromHttpUrl(weatherApiUrl + "weather")
-				.queryParam("lat", lat)
-				.queryParam("lon", lon)
-				.queryParam("appid", weatherApiToken)
-				.queryParam("units", "metric")
-				.toUriString();
-		Logger.getLogger("ListenerUpdateTelegram").log(Level.INFO, "Weather API URL: " + url);
-		return restTemplate.getForObject(url, String.class);
-	}
-
-	private String getJoke() {
-		// Implement the joke fetching logic here
-		return "Here is a joke!";
 	}
 }

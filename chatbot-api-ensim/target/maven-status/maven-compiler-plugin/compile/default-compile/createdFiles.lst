@@ -19,6 +19,7 @@ fr\ensim\interop\introrest\ListenerUpdateTelegram$1.class
 fr\ensim\interop\introrest\model\telegram\ChatInviteLink.class
 fr\ensim\interop\introrest\model\telegram\Audio.class
 fr\ensim\interop\introrest\model\telegram\Document.class
+fr\ensim\interop\introrest\service\BlagueService.class
 fr\ensim\interop\introrest\model\telegram\Video.class
 fr\ensim\interop\introrest\model\telegram\ApiResponseTelegram.class
 fr\ensim\interop\introrest\model\telegram\User.class
