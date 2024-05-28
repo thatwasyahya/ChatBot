@@ -7,10 +7,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.util.UriComponentsBuilder;
-
-import java.util.List;
-import java.util.Random;
 
 @RestController
 public class MessageRestController {
@@ -40,40 +36,18 @@ public class MessageRestController {
 
 	@PostMapping("/sendMessage")
 	public String sendMessage(@RequestParam String chatId, @RequestParam String text) {
-		String url = UriComponentsBuilder.fromHttpUrl(getTelegramApiUrl("sendMessage"))
-				.queryParam("chat_id", chatId)
-				.queryParam("text", text)
-				.toUriString();
-
-		url = decodeUrl(url);
-
+		String url = getTelegramApiUrl("sendMessage") + "?chat_id=" + chatId + "&text=" + text;
 		return restTemplate.getForObject(url, String.class);
 	}
 
 	@GetMapping("/weather")
 	public String getWeather(@RequestParam double lat, @RequestParam double lon) {
-		String url = UriComponentsBuilder.fromHttpUrl(weatherApiUrl + "weather")
-				.queryParam("lat", lat)
-				.queryParam("lon", lon)
-				.queryParam("appid", weatherApiToken)
-				.queryParam("units", "metric")
-				.toUriString();
-
-		url = decodeUrl(url);
-
+		String url = weatherApiUrl + "weather?lat=" + lat + "&lon=" + lon + "&appid=" + weatherApiToken + "&units=metric";
 		return restTemplate.getForObject(url, String.class);
 	}
 
 	@GetMapping("/joke")
 	public String getJoke() {
 		return blagueService.getRandomJoke();
-	}
-
-	private String decodeUrl(String url) {
-		try {
-			return java.net.URLDecoder.decode(url, java.nio.charset.StandardCharsets.UTF_8.toString());
-		} catch (java.io.UnsupportedEncodingException e) {
-			throw new RuntimeException("Failed to decode URL", e);
-		}
 	}
 }

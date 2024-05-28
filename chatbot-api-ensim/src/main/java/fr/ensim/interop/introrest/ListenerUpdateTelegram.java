@@ -2,9 +2,13 @@ package fr.ensim.interop.introrest;
 
 import fr.ensim.interop.introrest.model.telegram.ApiResponseUpdateTelegram;
 import fr.ensim.interop.introrest.controller.MessageRestController;
+import fr.ensim.interop.introrest.service.BlagueService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
@@ -51,7 +55,7 @@ public class ListenerUpdateTelegram implements CommandLineRunner {
 			public void run() {
 				pollUpdates();
 			}
-		}, 0, 5000); // Poll every 5 seconds
+		}, 0, 3000); // Poll every 5 seconds
 	}
 
 	private void pollUpdates() {
@@ -66,18 +70,17 @@ public class ListenerUpdateTelegram implements CommandLineRunner {
 						String chatId = String.valueOf(update.getMessage().getChat().getId());
 						String userName = update.getMessage().getFrom().getFirstName();
 
-						if (text.contains("hello")) {
+						if (text.toLowerCase().contains("hello")) {
 							sendMessage(chatId, "Hello " + userName + "!");
-						} else if (text.contains("meteo")) {
+						} else if (text.toLowerCase().contains("meteo")) {
 							double lat = 44.34;
 							double lon = 10.99;
-							String weatherResponse = messageRestController.getWeather(lat, lon);
+							String weatherResponse = getWeather(lat, lon);
 							sendMessage(chatId, "Voici la météo actuelle : " + weatherResponse);
-						} else if (text.contains("blague")) {
+						} else if (text.toLowerCase().contains("blague")) {
 							sendMessage(chatId, "Fetching a joke...");
 							sendMessage(chatId, messageRestController.getJoke());
 						}
-
 						offset = update.getUpdateId() + 1;
 					}
 				});
@@ -86,16 +89,15 @@ public class ListenerUpdateTelegram implements CommandLineRunner {
 			e.printStackTrace();
 		}
 	}
-
-	private void sendMessage(String chatId, String text) {
-		String url = UriComponentsBuilder.fromHttpUrl(getTelegramApiUrl("sendMessage"))
-				.queryParam("chat_id", chatId)
-				.queryParam("text", text)
-				.toUriString();
-		try {
-			restTemplate.getForObject(url, String.class);
-		} catch (RestClientException e) {
-			e.printStackTrace();
-		}
+	@PostMapping("/sendMessage")
+	public String sendMessage(String chatId, String text) {
+		String url = getTelegramApiUrl("sendMessage") + "?chat_id=" + chatId + "&text=" + text;
+		return restTemplate.getForObject(url, String.class);
 	}
+	@GetMapping("/weather")
+	public String getWeather(double lat, double lon) {
+		String url = weatherApiUrl + "weather?lat=" + lat + "&lon=" + lon + "&appid=" + weatherApiToken + "&units=metric";
+		return restTemplate.getForObject(url, String.class);
+	}
+
 }
